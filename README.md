@@ -38,19 +38,3 @@ Launch the dashboard:
 streamlit run dashboard.py
 ```
 Opens at http://localhost:8501
-
-## Not built yet (next steps, in priority order)
-1. **Automated alerts** — the feed is simulated on load; a real version
-   would push notifications (SMS/email/webhook) when a location crosses
-   the high-risk threshold.
-2. **Real data sources** — swap synthetic values for actual IMD rainfall
-   and ISRO/Bhuvan satellite + landslide-inventory data once you've
-   registered for portal access (both need free accounts, not instant).
-3. **Offline sync** — the official brief calls this out specifically;
-   worth mentioning even if not fully built, since 2026 judges give
-   bonus points for offline/on-device capability.
-4. **Persistence** — citizen reports currently only last for the browser
-   session; a real deployment needs a database.
-
-Say "next" and I'll build whichever of these you want the same way —
-coded, run, and verified before you see it.
