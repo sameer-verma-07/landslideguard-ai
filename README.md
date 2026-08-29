@@ -1,40 +1,24 @@
-# PS 26001 — NER Landslide Early Warning Dashboard (Phase 1)
+# LandslideGuard AI 🏔️
 
-SIH 2026 prototype for "AI-Based Early Warning and Landslide Risk Monitoring
-System in NER" — your **main** submission (PS 26017 is the backup).
+**Live Deployment:** [Launch Command Center](https://landslideguard-ai-kh7h6j3gm24baq6eor87qz.streamlit.app)
 
-## What's in Phase 1
-- `generate_data.py` — 300 synthetic monitoring points spread across all 8
-  North Eastern states, with a realistic underlying landslide-risk pattern
-  (slope, soil moisture, rainfall, vegetation loss, history).
-- `train_model.py` — Random Forest classifier predicting high-risk-alert
-  probability per location, with feature importances for explainability.
-- `dashboard.py` — Streamlit app with:
-  - a live risk **map** of NER (color-coded by risk level, sized by
-    nearby population)
-  - risk-sorted location table
-  - "what's driving risk" chart
-  - a simulated live alert feed
-  - a citizen/field-officer ground-report form (with photo upload)
-  - a per-location detail + recommended-action view
+**Problem Statement:** SIH 2026 PS26001  
+**Institution:** Seth Jai Parkash Mukand Lal Institute of Engineering and Technology (JMIT)  
+**Team Leader:** Sameer Verma 
 
-Everything has already been run once and verified working — `data/` and
-`model/` are included, so the dashboard opens with real results immediately.
+## Overview
+LandslideGuard AI is a prototype Command & Control System designed for North Eastern Region (NER) disaster intelligence. It replaces traditional, static early warning nodes with real-time, predictive 3D spatial intelligence and edge-resilient offline reporting.
 
-## Setup
-```bash
-pip install -r requirements.txt
-```
+## Key Features
+* **Dynamic AI Risk Scoring:** Scikit-Learn machine learning pipeline dynamically scores risk using live variables (slope angle, soil moisture, and cumulative rainfall).
+* **3D Spatial Intelligence:** Interactive PyDeck terrain mapping generates immediate, visual threat assessments (Low to Critical).
+* **"What-If" Simulator:** Allows authorities to manually inject environmental anomalies (e.g., a 200mm rainfall surge) to stress-test predictive risk in real-time.
+* **Edge Resilience:** SQLite database integration ensures citizen ground-observation reports are preserved locally and synced even during mountain network blackouts.
 
-## Run
-Optional — regenerate data or retrain (already done once):
-```bash
-python generate_data.py
-python train_model.py
-```
+## Local Installation
+To run this project locally for development or testing:
 
-Launch the dashboard:
-```bash
-streamlit run dashboard.py
-```
-Opens at http://localhost:8501
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/sameer-verma-07/landslideguard-ai.git](https://github.com/sameer-verma-07/landslideguard-ai.git)
+   cd landslideguard-ai
