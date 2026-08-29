@@ -1,6 +1,6 @@
 # LandslideGuard AI 🏔️
 
-**Live Deployment:** [Launch Command Center](https://landslideguard-ai-kh7h6j3gm24baq6eor87qz.streamlit.app)
+**Live Deployment:** https://landslideguard-ai-cc8wbrllwbhfdi5raxptti.streamlit.app/
 
 **Problem Statement:** SIH 2026 PS26001  
 **Institution:** Seth Jai Parkash Mukand Lal Institute of Engineering and Technology (JMIT)  
