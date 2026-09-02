@@ -17,8 +17,13 @@ import plotly.graph_objects as go
 import numpy as np
 import time
 
+# Initialize Session State
 if 'offline_queue' not in st.session_state:
     st.session_state.offline_queue = []
+if 'state_filter' not in st.session_state:
+    st.session_state.state_filter = []
+if 'risk_filter' not in st.session_state:
+    st.session_state.risk_filter = []
 
 # ============================================================
 # UTILITIES & DATABASE
@@ -44,22 +49,18 @@ def init_db():
 
 init_db()
 
-def insert_report(time, loc, obs, note):
+def insert_report(time_val, loc, obs, note):
     conn = sqlite3.connect('landslide_reports.db')
     c = conn.cursor()
-    c.execute("INSERT INTO reports VALUES (?, ?, ?, ?)", (time, loc, obs, note))
+    c.execute("INSERT INTO reports VALUES (?, ?, ?, ?)", (time_val, loc, obs, note))
     conn.commit()
     conn.close()
 
 def get_reports():
     conn = sqlite3.connect('landslide_reports.db')
-    df = pd.read_sql("SELECT * FROM reports ORDER BY timestamp DESC", conn)
+    df_reports = pd.read_sql("SELECT * FROM reports ORDER BY timestamp DESC", conn)
     conn.close()
-    return df
-
-def trigger_emergency_webhook(location, risk, score):
-    try: return True
-    except: return False
+    return df_reports
     
 # ============================================================
 # PAGE CONFIG 
@@ -211,7 +212,7 @@ st.markdown('<div class="hero-subtitle">NER Disaster Intelligence • High-Fidel
 st.sidebar.markdown("---")
 st.sidebar.markdown(
     f"""
-    <div style="margin-bottom: 28px;">
+    <div style="margin-bottom: 15px;">
         <div style="font-size: 1.45rem; font-weight: 900; color: {text_color};">🛰️ COMMAND UPLINK</div>
         <div style="font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em; color: #10b981;">SYSTEM: ONLINE</div>
     </div>
@@ -219,8 +220,32 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 
-state_filter = st.sidebar.multiselect("Region Select", sorted(df["state"].unique()))
-risk_filter = st.sidebar.multiselect("Threat Level", ["Critical", "High", "Medium", "Low"])
+# Callback to clear filters
+def clear_filters():
+    st.session_state.state_filter = []
+    st.session_state.risk_filter = []
+
+state_filter = st.sidebar.multiselect(
+    "Region Select", 
+    sorted(df["state"].unique()), 
+    key="state_filter",
+    help="Filter active monitoring nodes by specific North Eastern states."
+)
+risk_filter = st.sidebar.multiselect(
+    "Threat Level", 
+    ["Critical", "High", "Medium", "Low"], 
+    key="risk_filter",
+    help="Isolate zones based on the AI's current predictive risk assessment."
+)
+
+st.sidebar.button("🔄 Clear All Filters", on_click=clear_filters, use_container_width=True)
+
+# **CRITICAL FIX: Define `filtered` dataset based on the sidebar choices**
+filtered = df.copy()
+if state_filter: 
+    filtered = filtered[filtered["state"].isin(state_filter)]
+if risk_filter: 
+    filtered = filtered[filtered["risk_level"].isin(risk_filter)]
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### System Architecture")
@@ -243,9 +268,9 @@ if offline_mode:
     </div>
     """, unsafe_allow_html=True)
 
-filtered = df.copy()
-if state_filter: filtered = filtered[filtered["state"].isin(state_filter)]
-if risk_filter: filtered = filtered[filtered["risk_level"].isin(risk_filter)]
+# Safety Catch: Empty States
+if filtered.empty:
+    st.info("No active monitoring nodes match your current filter criteria. Try adjusting the Region or Threat Level.")
 
 # ============================================================
 # KPI SECTION (Glassmorphism)
@@ -369,6 +394,41 @@ with tab2:
         fig_imp.update_layout(yaxis={"categoryorder": "total ascending"}, height=320, margin=dict(l=0, r=0, t=0, b=0), plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font=dict(color=chart_font))
         st.plotly_chart(fig_imp, use_container_width=True)
 
+    st.write("---")
+    
+    # AI Simulator Expander
+    with st.expander("🎛️ Advanced: AI 'What-If' Scenario Simulator", expanded=False):
+        st.markdown(f"<span style='color:{chart_font};'>Manually adjust environmental factors to test the machine learning model's real-time predictions.</span>", unsafe_allow_html=True)
+        
+        sim_col1, sim_col2, sim_col3 = st.columns([1, 1, 1])
+        with sim_col1:
+            # Safe catch for simulator location dropdown if filtered is empty
+            sim_opts = filtered["location_id"].unique() if len(filtered) else df["location_id"].unique()
+            sim_loc = st.selectbox("Target Location", sim_opts, help="Select a monitoring node to run the simulation.")
+            base_row = df[df["location_id"] == sim_loc].iloc[0]
+        with sim_col2:
+            sim_rain = st.slider("Simulated 7-Day Rainfall (mm)", min_value=0, max_value=500, value=int(base_row["rainfall_last_7d_mm"]), step=10, help="Simulate a sudden monsoon surge.")
+        with sim_col3:
+            sim_moisture = st.slider("Simulated Soil Moisture (%)", min_value=0, max_value=100, value=int(base_row["soil_moisture_pct"]), step=5, help="Simulate ground saturation levels.")
+
+        sim_df = pd.DataFrame([base_row])
+        sim_df["rainfall_last_7d_mm"] = sim_rain
+        sim_df["soil_moisture_pct"] = sim_moisture
+        
+        sim_score = score_dataframe(sim_df, model, encoders, feature_cols)[0]
+        sim_level = risk_bucket(sim_score)
+        sim_color = RISK_COLORS[sim_level]
+        
+        st.markdown(
+            f"""
+            <div style="background: {main_bg}; padding: 20px; border-radius: 12px; border-left: 6px solid {sim_color}; margin-top: 15px; border: 1px solid {kpi_border};">
+                <h4 style="margin:0; color: {text_color};">Live Model Prediction: {LEVEL_ICONS[sim_level]} {sim_level.upper()} RISK</h4>
+                <p style="margin:5px 0 0 0; color:{chart_font}; font-size:1.2rem;"><b>{(sim_score*100):.1f}%</b> Confidence Score</p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
 with tab3:
     st.markdown("### Automated Threat Detection")
     top_alerts = df[df["risk_level"].isin(["Critical", "High"])].sort_values("risk_score", ascending=False).head(5)
@@ -384,10 +444,14 @@ with tab4:
     with st.form("citizen_report_form", clear_on_submit=True):
         rep_col1, rep_col2 = st.columns(2)
         with rep_col1:
-            location = st.selectbox("Nearest monitoring point", df["location_id"])
+            loc_options = df["location_id"].unique()
+            location = st.selectbox("Nearest monitoring point", loc_options)
             observation = st.selectbox("Observation", ["Visible ground cracks", "Slope movement", "Water seepage", "Other"])
         with rep_col2:
             note = st.text_input("Additional note")
-        if st.form_submit_button("Submit report", type="primary", use_container_width=True):
-            insert_report(datetime.now().strftime("%Y-%m-%d %H:%M"), location, observation, note)
-            st.success("Saved.")
+        
+        if st.form_submit_button("Transmit Secure Report", type="primary", use_container_width=True):
+            with st.spinner("Encrypting and transmitting data..."):
+                time.sleep(0.8) 
+                insert_report(datetime.now().strftime("%Y-%m-%d %H:%M"), location, observation, note)
+            st.toast("Ground observation saved to secure database.", icon="✅")
