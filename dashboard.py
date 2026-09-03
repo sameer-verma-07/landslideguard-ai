@@ -158,6 +158,19 @@ st.markdown(f"""
     .stTabs [data-baseweb="tab-list"] {{ gap: 24px; }}
     .stTabs [data-baseweb="tab"] {{ height: 50px; font-weight: 600 !important; font-size: 1.05rem !important; }}
     hr {{ border-color: {grid_color}; margin: 2rem 0; }}
+
+    /* ============================================================ */
+    /* MOBILE RESPONSIVENESS OVERRIDES                              */
+    /* ============================================================ */
+    @media (max-width: 768px) {{
+        .block-container {{ padding-top: 3rem !important; padding-left: 1rem !important; padding-right: 1rem !important; }}
+        .hero-title {{ font-size: 2.2rem !important; line-height: 1.1 !important; }}
+        .hero-subtitle {{ font-size: 0.85rem !important; margin-bottom: 1.5rem !important; }}
+        .kpi-container {{ padding: 16px !important; min-height: 100px !important; margin-bottom: 10px !important; }}
+        .kpi-value {{ font-size: 2rem !important; }}
+        .kpi-label {{ font-size: 0.65rem !important; }}
+        .stTabs [data-baseweb="tab"] {{ font-size: 0.9rem !important; }}
+    }}
     </style>
 """, unsafe_allow_html=True)
 
